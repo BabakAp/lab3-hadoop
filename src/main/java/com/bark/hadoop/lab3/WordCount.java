@@ -19,6 +19,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import XmlInputFormat;
 
 public class WordCount extends Configured implements Tool {
 
@@ -31,6 +32,8 @@ public class WordCount extends Configured implements Tool {
     public int run(String args[]) {
         try {
             Configuration conf = new Configuration();
+            conf.set("xmlinput.start", "<page>");            
+            conf.set("xmlinput.end", "</page>");
 
             Job job = Job.getInstance(conf);
             job.setJarByClass(WordCount.class);
@@ -47,7 +50,7 @@ public class WordCount extends Configured implements Tool {
 
             // specify input and output DIRECTORIES
             FileInputFormat.addInputPath(job, new Path(args[0]));
-            job.setInputFormatClass(TextInputFormat.class);
+            job.setInputFormatClass(XmlInputFormat.class);
 
             FileOutputFormat.setOutputPath(job, new Path(args[1]));
             job.setOutputFormatClass(TextOutputFormat.class);
