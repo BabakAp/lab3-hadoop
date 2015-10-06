@@ -11,6 +11,8 @@ package com.bark.hadoop.lab3;
  */
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.stream.XMLInputFactory;
 import static javax.xml.stream.XMLStreamConstants.CHARACTERS;
@@ -22,9 +24,11 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import javax.xml.stream.XMLStreamException;
 
 public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
 
+    @Override
     protected void map(LongWritable key, Text value, Mapper.Context context) throws IOException, InterruptedException {
         try {
             XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(new ByteArrayInputStream(value.getBytes()));
@@ -54,15 +58,28 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
 
             title = title.trim();
             title = title.replaceAll(" ", "_");
+            /**
+             * Find type 1 links e.g. [[some text]] and type 2 links [[a|b]]
+             */
             Pattern p = Pattern.compile("\\[\\[(.*?)\\]\\]");
             Matcher m = p.matcher(textData);
             while (m.find()) {
-                links += (" " + m.group(1)).trim().replaceAll(" ", "_");
+                links += " " + (m.group(1)).trim().replaceAll(" ", "_").split("\\|")[0];
             }
-
-            context.write(title, links);
-        } catch (Exception e) {
-            //TODO: do something?
+            links = links.trim();
+            if (links.equalsIgnoreCase("")) {
+//                write (!,title) for pages with no outbound links?
+                context.write("!", title);
+            }
+            //TODO: "it should not contain a link which points to the page itself" How are we gonna do this!? <title>AccessibleComputing</title> while the link is [[Computer accessibility]]!
+//            links = links.replaceAll(title, "");
+            String[] myLinks = links.split(" ");
+            for (int i = 0; i < myLinks.length; i++) {
+//                Write reverse? (link,title) pairs (multiple writes are ok!)
+                context.write(myLinks[i], title);
+            }
+        } catch (XMLStreamException ex) {
+            Logger.getLogger(WordCountMapper.class.getName()).log(Level.SEVERE, ex.toString(), ex);
         }
     }
 }

@@ -6,6 +6,8 @@
 package com.bark.hadoop.lab3;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -25,13 +27,13 @@ public class WordCount extends Configured implements Tool {
     public static void main(String[] args) throws Exception {
         int res = ToolRunner.run(new Configuration(), new WordCount(), args);
         System.exit(res);
-	}
+    }
 
     @Override
     public int run(String args[]) {
         try {
             Configuration conf = new Configuration();
-            conf.set("xmlinput.start", "<page>");            
+            conf.set("xmlinput.start", "<page>");
             conf.set("xmlinput.end", "</page>");
 
             Job job = Job.getInstance(conf);
@@ -45,7 +47,8 @@ public class WordCount extends Configured implements Tool {
 
             // specify output types
             job.setOutputKeyClass(Text.class);
-            job.setOutputValueClass(IntWritable.class);
+//            job.setOutputValueClass(IntWritable.class);
+            job.setOutputValueClass(Text.class);
 
             // specify input and output DIRECTORIES
             FileInputFormat.addInputPath(job, new Path(args[0]));
@@ -54,10 +57,10 @@ public class WordCount extends Configured implements Tool {
             FileOutputFormat.setOutputPath(job, new Path(args[1]));
             job.setOutputFormatClass(TextOutputFormat.class);
 
-            return(job.waitForCompletion(true) ? 0 : 1);
-        } catch (InterruptedException|ClassNotFoundException|IOException e) {
+            return (job.waitForCompletion(true) ? 0 : 1);
+        } catch (InterruptedException | ClassNotFoundException | IOException ex) {
+            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
             System.err.println("Error during mapreduce job.");
-            e.printStackTrace();
             return 2;
         }
     }
