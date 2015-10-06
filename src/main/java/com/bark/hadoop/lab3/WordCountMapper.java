@@ -26,9 +26,8 @@ import java.util.regex.Matcher;
 public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
 
     protected void map(LongWritable key, Text value, Mapper.Context context) throws IOException, InterruptedException {
-        String document = value.toString();
         try {
-            XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(new ByteArrayInputStream(document.getBytes()));
+            XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(new ByteArrayInputStream(value.getBytes()));
             String title = "";
             String links = "";
             String textData = "";
@@ -45,6 +44,7 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
                         } else if (currentElement.equalsIgnoreCase("text")) {
 //                            TODO: String has a limit, will result in error: "constant string too long" if text is too big,
 //                             we should do link extraction line by line
+//                            UPDATE: maybe not! Apparently the limit is only for 'constant' strings, not strings constructed during runtime :|
                             textData += reader.getText();
                         }
                         break;
@@ -52,11 +52,12 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
             }
             reader.close();
 
-            title = title.replace(" ", "_");
+            title = title.trim();
+            title = title.replaceAll(" ", "_");
             Pattern p = Pattern.compile("\\[\\[(.*?)\\]\\]");
             Matcher m = p.matcher(textData);
             while (m.find()) {
-                links += " " + m.group(1);
+                links += (" " + m.group(1)).trim().replaceAll(" ", "_");
             }
 
             context.write(title, links);
