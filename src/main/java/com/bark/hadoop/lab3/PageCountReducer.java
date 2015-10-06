@@ -15,12 +15,8 @@ import org.apache.hadoop.mapreduce.Reducer;
  */
 public class PageCountReducer extends Reducer<Text, Text, Text, Text> {
 
-//    private IntWritable result = new IntWritable();
-//    Reduce step can be called multiple times, use a static map to keep track of titles seen?
-//    public static HashMap<String, HashSet<String>> adjacencyGraph = new HashMap<>();
-
     @Override
-    public void reduce(Text key, Iterable<Text> values, Reducer.Context context) throws IOException, InterruptedException {
+    public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 //        int sum = 0;
 //        for (IntWritable v : values) {
 //            sum += v.get();

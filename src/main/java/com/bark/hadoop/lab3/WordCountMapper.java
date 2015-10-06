@@ -5,10 +5,6 @@
  */
 package com.bark.hadoop.lab3;
 
-/**
- * Credits:
- * http://log.malchiodi.com/2014/11/12/executing-jar-encoded-mapreduce-jobs-in-aws-either-through-web-interface-or-cli/
- */
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -67,10 +63,14 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
                 links += " " + (m.group(1)).trim().replaceAll(" ", "_").split("\\|")[0];
             }
             links = links.trim();
-            if (links.equalsIgnoreCase("")) {
-//                write (!,title) for pages with no outbound links?
-                context.write("!", title);
-            }
+//            if (links.equalsIgnoreCase("")) {
+////                write (!,title) for pages with no outbound links?
+//                context.write("!", title);
+//            }
+            /**
+             * For every title that exists, write the title and "!"
+             */
+            context.write(title,"!");
             //TODO: "it should not contain a link which points to the page itself" How are we gonna do this!? <title>AccessibleComputing</title> while the link is [[Computer accessibility]]!
 //            links = links.replaceAll(title, "");
             String[] myLinks = links.split(" ");
