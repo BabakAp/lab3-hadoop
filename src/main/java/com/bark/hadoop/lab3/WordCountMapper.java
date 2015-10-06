@@ -54,6 +54,7 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
 
             title = title.trim();
             title = title.replaceAll(" ", "_");
+//            title = title.toLowerCase();
             /**
              * Find type 1 links e.g. [[some text]] and type 2 links [[a|b]]
              */
@@ -63,10 +64,7 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
                 links += " " + (m.group(1)).trim().replaceAll(" ", "_").split("\\|")[0];
             }
             links = links.trim();
-//            if (links.equalsIgnoreCase("")) {
-////                write (!,title) for pages with no outbound links?
-//                context.write("!", title);
-//            }
+//            links = links.toLowerCase();
             /**
              * For every title that exists, write the title and "!"
              */
@@ -75,7 +73,7 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
 //            links = links.replaceAll(title, "");
             String[] myLinks = links.split(" ");
             for (int i = 0; i < myLinks.length; i++) {
-//                Write reverse? (link,title) pairs (multiple writes are ok!)
+//                Write reverse? (link,title) pairs (multiple writes are ok)
                 context.write(new Text(myLinks[i]), new Text(title));
             }
         } catch (XMLStreamException ex) {

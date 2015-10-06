@@ -6,28 +6,26 @@
 package com.bark.hadoop.lab3;
 
 import java.io.IOException;
+import java.util.HashSet;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 public class WordCountReducer extends Reducer<Text, Text, Text, Text> {
 
-//    private IntWritable result = new IntWritable();
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-//        int sum = 0;
-//        for (IntWritable v : values) {
-//            sum += v.get();
-//        }
-//        result.set(sum);
         boolean isRedLink = true;
+        HashSet<String> myValues = new HashSet<>();
         for (Text t : values) {
-            if (t.toString().equalsIgnoreCase("!")) {
+            if (t.toString().trim().equalsIgnoreCase("!")) {
                 isRedLink = false;
+            } else {
+                myValues.add(t.toString());
             }
         }
         if (!isRedLink) {
-            for (Text t : values) {
-                context.write(key, t);
+            for (String t : myValues) {
+                context.write(key, new Text(t));
             }
         }
     }
