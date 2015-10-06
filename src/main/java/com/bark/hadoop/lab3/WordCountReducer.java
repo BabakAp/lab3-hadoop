@@ -19,9 +19,8 @@ public class WordCountReducer extends Reducer<Text, Text, Text, Text> {
         for (Text t : values) {
             if (t.toString().trim().equalsIgnoreCase("!")) {
                 isRedLink = false;
-            } else {
-                myValues.add(t.toString());
             }
+            myValues.add(t.toString());
         }
         if (!isRedLink) {
             for (String t : myValues) {
