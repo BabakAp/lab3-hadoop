@@ -29,9 +29,9 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
         String document = value.toString();
         try {
             XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(new ByteArrayInputStream(document.getBytes()));
-            String Title = "";
-            String Links = "";
-            String TextData = "";
+            String title = "";
+            String links = "";
+            String textData = "";
             String currentElement = "";
             while (reader.hasNext()) {
                 int code = reader.next();
@@ -41,22 +41,25 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
                         break;
                     case CHARACTERS:
                         if (currentElement.equalsIgnoreCase("title")) {
-                            Title += reader.getText();
+                            title += reader.getText();
                         } else if (currentElement.equalsIgnoreCase("text")) {
-                            TextData += reader.getText();
+//                            TODO: String has a limit, will result in error: "constant string too long" if text is too big,
+//                             we should do link extraction line by line
+                            textData += reader.getText();
                         }
                         break;
                 }
             }
             reader.close();
 
-            Title = Title.replace(" ", "_");
-            Pattern p = Pattern.compile("[[(.*)]]");//TODO: Check if valid!
-            Matcher m = p.matcher(TextData);
-            for (int i = 0; i < m.groupCount(); i++) {
-                Links += " " + m.group(i);
+            title = title.replace(" ", "_");
+            Pattern p = Pattern.compile("\\[\\[(.*?)\\]\\]");
+            Matcher m = p.matcher(textData);
+            while (m.find()) {
+                links += " " + m.group(1);
             }
-            context.write(Title, Links);
+
+            context.write(title, links);
         } catch (Exception e) {
             //TODO: do something?
         }
