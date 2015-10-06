@@ -25,7 +25,7 @@ import javax.xml.stream.XMLStreamException;
 public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
 
     @Override
-    protected void map(LongWritable key, Text value, Mapper.Context context) throws IOException, InterruptedException {
+    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         try {
             XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(new ByteArrayInputStream(value.getBytes()));
             String title = "";
@@ -70,13 +70,13 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
             /**
              * For every title that exists, write the title and "!"
              */
-            context.write(title,"!");
+            context.write(new Text(title), new Text("!"));
             //TODO: "it should not contain a link which points to the page itself" How are we gonna do this!? <title>AccessibleComputing</title> while the link is [[Computer accessibility]]!
 //            links = links.replaceAll(title, "");
             String[] myLinks = links.split(" ");
             for (int i = 0; i < myLinks.length; i++) {
 //                Write reverse? (link,title) pairs (multiple writes are ok!)
-                context.write(myLinks[i], title);
+                context.write(new Text(myLinks[i]), new Text(title));
             }
         } catch (XMLStreamException ex) {
             Logger.getLogger(WordCountMapper.class.getName()).log(Level.SEVERE, ex.toString(), ex);
