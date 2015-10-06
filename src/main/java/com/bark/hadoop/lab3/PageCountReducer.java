@@ -6,6 +6,7 @@
 package com.bark.hadoop.lab3;
 
 import java.io.IOException;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
@@ -13,16 +14,17 @@ import org.apache.hadoop.mapreduce.Reducer;
  *
  * @author roozbeh
  */
-public class PageCountReducer extends Reducer<Text, Text, Text, Text> {
+public class PageCountReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
 
     @Override
-    public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-//        int sum = 0;
-//        for (IntWritable v : values) {
-//            sum += v.get();
-//        }
-//        result.set(sum);
-        Text text = new Text("alaki");
-        context.write(key, text);
+    public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+        int sum = 0;
+        
+        for(IntWritable value : values)
+            sum += value.get();
+        
+        context.write(key, new IntWritable(sum));
     }
+    //TODO: Move this to main class.
+    //conf.set("mapred.textoutputformat.separator", "=");
 }
