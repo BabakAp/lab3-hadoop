@@ -42,8 +42,11 @@ public class XmlInputFormat extends TextInputFormat {
 
     private static final Logger log = LoggerFactory.getLogger(XmlInputFormat.class);
 
-    public static final String START_TAG_KEY = "xmlinput.start";
-    public static final String END_TAG_KEY = "xmlinput.end";
+    /**
+     * Configure start and end tags to be Wikipedia pages
+     */
+    public static final String START_TAG_KEY = "<page";
+    public static final String END_TAG_KEY = "</page>";
 
     @Override
     public RecordReader<LongWritable, Text> createRecordReader(InputSplit split, TaskAttemptContext context) {
