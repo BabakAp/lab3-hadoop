@@ -14,13 +14,13 @@ public class PageRankReducer extends Reducer<Text, IntWritable, Text, IntWritabl
 
     @Override
     public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-        int sum = 0;
-
-        for (IntWritable value : values) {
-            sum += value.get();
-        }
-
-        context.write(key, new IntWritable(sum));
+//        int sum = 0;
+//
+//        for (IntWritable value : values) {
+//            sum += value.get();
+//        }
+//
+//        context.write(key, new IntWritable(sum));
     }
     //TODO: Move this to main class.
     //conf.set("mapred.textoutputformat.separator", "=");
