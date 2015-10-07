@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -41,7 +42,7 @@ public class WordCount extends Configured implements Tool {
         long timeStamp = new Date().getTime();
         try {
             /**
-             * Job 1
+             * Job 1: Parse XML input and read title,links
              */
             Configuration conf = new Configuration();
             conf.set("xmlinput.start", "<page>");
@@ -74,7 +75,7 @@ public class WordCount extends Configured implements Tool {
             return 2;
         }
         /**
-         * Job 2
+         * Job 2: Adjacency outGraph
          */
         try {
             Configuration conf2 = new Configuration();
@@ -106,7 +107,7 @@ public class WordCount extends Configured implements Tool {
             return 2;
         }
         /**
-         * Job 3
+         * Job 3: PageCount
          */
         try {
             Configuration conf3 = new Configuration();
@@ -138,7 +139,7 @@ public class WordCount extends Configured implements Tool {
             return 2;
         }
         /**
-         * Job 4
+         * Job 4: PageRank
          */
         try {
             Configuration conf4 = new Configuration();
@@ -172,7 +173,7 @@ public class WordCount extends Configured implements Tool {
 
             // specify output types
             job4.setOutputKeyClass(Text.class);
-            job4.setOutputValueClass(IntWritable.class);
+            job4.setOutputValueClass(Text.class);
 
             // specify input and output DIRECTORIES
             FileInputFormat.addInputPath(job4, new Path((args[1] + "/" + timeStamp + "/job3")));

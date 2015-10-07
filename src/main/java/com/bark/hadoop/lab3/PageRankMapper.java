@@ -10,13 +10,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-public class PageRankMapper extends Mapper<LongWritable, Text, Text, DoubleWritable> {
-
+public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
+    
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         /**
@@ -41,7 +40,7 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, DoubleWrita
             pageRank = Double.parseDouble(mt.group(1).substring(2));
             hasPageRank = true;
         }
-
+        
         if (!hasPageRank) {
             try {
                 pageRank = 1 / (context.getConfiguration().getInt("N", 0));
@@ -53,17 +52,41 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, DoubleWrita
             }
         }
         /**
-         * Split on \t to get separate key(index 0) from values(index 1) Split
-         * values on space to separate out links(ignore the first,the pageRank)
+         * Split input line into key,value
          */
-        String[] outlinks = test.split("\t")[1].split(" ");
+        String[] split = test.split("\t");
         /**
-         * Divide pageRank over number of outLinks
+         * Emit this node's oldPageRank and it's adjacency outGraph if not empty
          */
-        pageRank /= (outlinks.length - 1);
-        DoubleWritable dw = new DoubleWritable(pageRank);
-        for (int i = 1; i < outlinks.length; i++) {
-            context.write(new Text(outlinks[i]), dw);
+        String output = "";
+        output += "_!" + pageRank;
+        if (split.length > 1) {
+            output += " " + split[1];
+        }
+        context.write(new Text(split[0]), new Text(output));
+        /**
+         * Emit pageRank/|outLinks| to all outLinks if not empty: Split on \t to
+         * get separate key(index 0) from values(index 1), Split values on space
+         * to separate out links(ignore the first(index 0),the pageRank, unless
+         * hasPageRank=false)
+         */
+        if (split.length > 1) {
+            String[] outlinks = split[1].split(" ");
+            /**
+             * Input has no outLinks, only has oldPageRank, already taken care
+             * of in previous emit, return
+             */
+            if (hasPageRank && outlinks.length == 1) {
+                return;
+            }
+            /**
+             * Divide pageRank over number of outLinks
+             */
+            pageRank /= hasPageRank ? (outlinks.length - 1) : outlinks.length;
+            
+            for (int i = hasPageRank ? 1 : 0; i < outlinks.length; i++) {
+                context.write(new Text(outlinks[i]), new Text("_!" + pageRank));
+            }
         }
     }
 }
