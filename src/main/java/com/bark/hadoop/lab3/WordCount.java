@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -51,7 +52,6 @@ public class WordCount extends Configured implements Tool {
 
             // specify output types
             job.setOutputKeyClass(Text.class);
-//            job.setOutputValueClass(IntWritable.class);
             job.setOutputValueClass(Text.class);
 
             // specify input and output DIRECTORIES
@@ -116,7 +116,7 @@ public class WordCount extends Configured implements Tool {
 
             // specify output types
             job3.setOutputKeyClass(Text.class);
-            job3.setOutputValueClass(Text.class);
+            job3.setOutputValueClass(IntWritable.class);
 
             // specify input and output DIRECTORIES
             FileInputFormat.addInputPath(job3, new Path((args[1] + "/" + timeStamp + "/job2")));
@@ -128,7 +128,7 @@ public class WordCount extends Configured implements Tool {
             return (job3.waitForCompletion(true) ? 0 : 1);
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
-            System.err.println("Error during mapreduce job.");
+            System.err.println("Error during mapreduce job3.");
             return 2;
         }
     }

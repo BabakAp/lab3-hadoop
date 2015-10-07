@@ -17,11 +17,11 @@ import org.apache.hadoop.mapreduce.Mapper;
 public class AdjMapper extends Mapper<LongWritable, Text, Text, Text> {
 
     @Override
-    protected void map(LongWritable key, Text value, Mapper.Context context) throws IOException, InterruptedException {
+    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         /**
-         * Split up the line into key,value pair
+         * Split up the line into (key,value) pair - separated by tab
          */
-        String[] document = value.toString().split(" ");
+        String[] document = value.toString().split("\t");
         /**
          * Nice names for better readability
          */
