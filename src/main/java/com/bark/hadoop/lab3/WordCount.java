@@ -6,7 +6,6 @@
 package com.bark.hadoop.lab3;
 
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,6 +31,7 @@ public class WordCount extends Configured implements Tool {
 
     @Override
     public int run(String args[]) {
+        long timeStamp = new Date().getTime();
         try {
             /**
              * Job 1
@@ -58,17 +58,23 @@ public class WordCount extends Configured implements Tool {
             FileInputFormat.addInputPath(job, new Path(args[0]));
             job.setInputFormatClass(XmlInputFormat.class);
 
-            Timestamp ts1 = new Timestamp(new Date().getTime());
-            FileOutputFormat.setOutputPath(job, new Path((args[1] + "/job1/" + ts1)));
+            FileOutputFormat.setOutputPath(job, new Path((args[1] + "/" + timeStamp + "/job1")));
             job.setOutputFormatClass(TextOutputFormat.class);
 
-            /**
-             * Job 2
-             */
+            job.waitForCompletion(true);
+        } catch (InterruptedException | ClassNotFoundException | IOException ex) {
+            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            System.err.println("Error during mapreduce job1.");
+            return 2;
+        }
+        /**
+         * Job 2
+         */
+        try {
             Configuration conf2 = new Configuration();
 
             Job job2 = Job.getInstance(conf2);
-            job.setJarByClass(WordCount.class);
+            job2.setJarByClass(WordCount.class);
 
             // specify a mapper
             job2.setMapperClass(AdjMapper.class);
@@ -78,17 +84,48 @@ public class WordCount extends Configured implements Tool {
 
             // specify output types
             job2.setOutputKeyClass(Text.class);
-//            job.setOutputValueClass(IntWritable.class);
             job2.setOutputValueClass(Text.class);
 
             // specify input and output DIRECTORIES
-            FileInputFormat.addInputPath(job2, new Path((args[1] + "/job1/" + ts1)));
+            FileInputFormat.addInputPath(job2, new Path((args[1] + "/" + timeStamp + "/job1")));
             job2.setInputFormatClass(TextInputFormat.class);
 
-            FileOutputFormat.setOutputPath(job2, new Path((args[1] + "/job2/" + ts1)));
+            FileOutputFormat.setOutputPath(job2, new Path((args[1] + "/" + timeStamp + "/job2")));
             job2.setOutputFormatClass(TextOutputFormat.class);
 
-            return (job.waitForCompletion(true) ? 0 : 1);
+            job2.waitForCompletion(true);
+        } catch (InterruptedException | ClassNotFoundException | IOException ex) {
+            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            System.err.println("Error during mapreduce job2.");
+            return 2;
+        }
+        /**
+         * Job 3
+         */
+        try {
+            Configuration conf3 = new Configuration();
+
+            Job job3 = Job.getInstance(conf3);
+            job3.setJarByClass(WordCount.class);
+
+            // specify a mapper
+            job3.setMapperClass(PageCountMapper.class);
+
+            // specify a reducer
+            job3.setReducerClass(PageCountReducer.class);
+
+            // specify output types
+            job3.setOutputKeyClass(Text.class);
+            job3.setOutputValueClass(Text.class);
+
+            // specify input and output DIRECTORIES
+            FileInputFormat.addInputPath(job3, new Path((args[1] + "/" + timeStamp + "/job2")));
+            job3.setInputFormatClass(TextInputFormat.class);
+
+            FileOutputFormat.setOutputPath(job3, new Path((args[1] + "/" + timeStamp + "/job3")));
+            job3.setOutputFormatClass(TextOutputFormat.class);
+
+            return (job3.waitForCompletion(true) ? 0 : 1);
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
             System.err.println("Error during mapreduce job.");
