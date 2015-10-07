@@ -5,10 +5,16 @@
  */
 package com.bark.hadoop.lab3;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Date;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -125,10 +131,60 @@ public class WordCount extends Configured implements Tool {
             FileOutputFormat.setOutputPath(job3, new Path((args[1] + "/" + timeStamp + "/job3")));
             job3.setOutputFormatClass(TextOutputFormat.class);
 
-            return (job3.waitForCompletion(true) ? 0 : 1);
+            job3.waitForCompletion(true);
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
             System.err.println("Error during mapreduce job3.");
+            return 2;
+        }
+        /**
+         * Job 4
+         */
+        try {
+            Configuration conf4 = new Configuration();
+            File folder = new File((args[1] + "/" + timeStamp + "/job3"));
+            File[] listOfFiles = folder.listFiles();
+            int n = 0;
+            for (int i = 0; i < listOfFiles.length; i++) {
+                if (listOfFiles[i].isFile() && n == 0) {
+                    BufferedReader br = new BufferedReader(new FileReader(listOfFiles[i]));
+                    String s = "";
+                    while ((s = br.readLine()) != null) {
+                        Pattern pt = Pattern.compile("(\\d+)");
+                        Matcher mt = pt.matcher(s);
+                        if (mt.find()) {
+                            n = new Integer(mt.group(1));
+                            break;
+                        }
+                    }
+                }
+            }
+            conf4.setInt("N", n);
+
+            Job job4 = Job.getInstance(conf4);
+            job4.setJarByClass(WordCount.class);
+
+            // specify a mapper
+            job4.setMapperClass(PageRankMapper.class);
+
+            // specify a reducer
+            job4.setReducerClass(PageRankReducer.class);
+
+            // specify output types
+            job4.setOutputKeyClass(Text.class);
+            job4.setOutputValueClass(IntWritable.class);
+
+            // specify input and output DIRECTORIES
+            FileInputFormat.addInputPath(job4, new Path((args[1] + "/" + timeStamp + "/job3")));
+            job4.setInputFormatClass(TextInputFormat.class);
+
+            FileOutputFormat.setOutputPath(job4, new Path((args[1] + "/" + timeStamp + "/job4")));
+            job4.setOutputFormatClass(TextOutputFormat.class);
+
+            return (job4.waitForCompletion(true) ? 0 : 1);
+        } catch (InterruptedException | ClassNotFoundException | IOException ex) {
+            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            System.err.println("Error during mapreduce job4.");
             return 2;
         }
     }
