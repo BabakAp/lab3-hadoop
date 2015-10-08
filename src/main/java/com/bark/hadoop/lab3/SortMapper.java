@@ -23,6 +23,9 @@ public class SortMapper extends Mapper<LongWritable, Text, DoubleWritable, Text>
         if (mt.find()) {
             pageRank = Double.parseDouble(mt.group(1).substring(2));
         }
-        context.write(new DoubleWritable(pageRank), new Text(value.toString().split("\t")[0]));
+        double minThreshold = 5d / (context.getConfiguration().getInt("N", 0));
+        if (pageRank >= minThreshold) {
+            context.write(new DoubleWritable(pageRank), new Text(value.toString().split("\t")[0]));
+        }
     }
 }

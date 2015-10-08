@@ -51,9 +51,9 @@ public class PageRankReducer extends Reducer<Text, Text, Text, Text> {
         /**
          * Only write entries with PageRank >= 5/N
          */
-        double minThreshold = 5d / (context.getConfiguration().getInt("N", 0));
-        if (newPageRank >= minThreshold) {
+//        double minThreshold = 5d / (context.getConfiguration().getInt("N", 0));
+//        if (newPageRank >= minThreshold) {
             context.write(key, new Text("_!" + newPageRank + "" + outGraph));
-        }
+//        }
     }
 }

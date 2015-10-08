@@ -220,6 +220,36 @@ public class WordCount extends Configured implements Tool {
             try {
                 Configuration conf5 = new Configuration();
 
+                /**
+                 * Read number of nodes from the output of job 3 : pageCount
+                 */
+                Path path = new Path((args[1] + tmp + "/job3"));
+                FileSystem fs = path.getFileSystem(conf5);
+                RemoteIterator<LocatedFileStatus> ri = fs.listFiles(path, true);
+
+                int n = 0;
+                Pattern pt = Pattern.compile("(\\d+)");
+                while (ri.hasNext()) {
+                    LocatedFileStatus lfs = ri.next();
+                    if (lfs.isFile() && n == 0) {
+                        FSDataInputStream inputStream = fs.open(lfs.getPath());
+                        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+                        String s = null;
+                        while ((s = br.readLine()) != null) {
+                            Matcher mt = pt.matcher(s);
+                            if (mt.find()) {
+                                n = new Integer(mt.group(1));
+                                break;
+                            }
+                        }
+                    }
+                }
+                /**
+                 * Done reading number of nodes, make it available to MapReduce
+                 * job key: N
+                 */
+                conf5.setInt("N", n);
+
                 Job job5 = Job.getInstance(conf5);
                 /**
                  * one reducer only
