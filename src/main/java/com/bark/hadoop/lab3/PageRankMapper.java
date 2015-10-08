@@ -26,11 +26,10 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
          * iterations: Read adjacency graph, number will be found (due to output
          * format of reducer of last iteration), do stuff... \n
          */
-//        String test = "A    _!55 2001 2020_World";
         String test = value.toString();
+        double basePageRank = 0;
         boolean hasPageRank = false;
         double pageRank = 0;
-        double oldPageRank = 0;
         /**
          * Pattern to distinguish our inserted numbers from numbers in titles
          * is: _!(numbers.numbers)
@@ -39,17 +38,14 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
         Matcher mt = pt.matcher(test);
         if (mt.find()) {
             pageRank = Double.parseDouble(mt.group(1).substring(2));
-            oldPageRank = pageRank;
             hasPageRank = true;
         }
-
+        /**
+         * If it's the first iteration, distribute 1/N among outLinks
+         */
         if (!hasPageRank) {
             try {
                 pageRank = 1d / (context.getConfiguration().getInt("N", 0));
-                /**
-                 * d = 0.85
-                 */
-                oldPageRank = (1 - 0.85) / (context.getConfiguration().getInt("N", 0));
             } catch (ArithmeticException ae) {
                 /**
                  * Catch division by zero (if 'N' was not set)
@@ -62,13 +58,21 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
          */
         String[] split = test.split("\t");
         /**
-         * Emit this node's oldPageRank and it's adjacency outGraph if not empty
+         * Emit this node's (1-d)/N and it's adjacency outGraph if not empty
          */
+        /**
+         * d = 0.85
+         */
+        basePageRank = (1 - 0.85) / (context.getConfiguration().getInt("N", 0));
         String output = "";
-        output += "_!" + oldPageRank;
+        output += "_!" + basePageRank;
         if (split.length > 1) {
-            output += " " + split[1];
+            String[] outlinks = split[1].split(" ");
+            for (int i = hasPageRank ? 1 : 0; i < outlinks.length; i++) {
+                output += " " + outlinks[i];
+            }
         }
+        output = output.trim();
         context.write(new Text(split[0]), new Text(output));
         /**
          * Emit pageRank/|outLinks| to all outLinks if not empty: Split on \t to
@@ -79,7 +83,7 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
         if (split.length > 1) {
             String[] outlinks = split[1].split(" ");
             /**
-             * Input has no outLinks, only has oldPageRank, already taken care
+             * Input has no outLinks, only has basePageRank, already taken care
              * of in previous emit, return
              */
             if (hasPageRank && outlinks.length == 1) {
@@ -93,9 +97,7 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
              * Divide pageRank over number of outLinks
              */
             pageRank /= hasPageRank ? (outlinks.length - 1) : outlinks.length;
-
             for (int i = hasPageRank ? 1 : 0; i < outlinks.length; i++) {
-//                System.out.println("");
                 context.write(new Text(outlinks[i]), new Text("_!" + pageRank));
             }
         }

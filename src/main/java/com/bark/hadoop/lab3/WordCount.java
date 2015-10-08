@@ -6,13 +6,9 @@
 package com.bark.hadoop.lab3;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -28,7 +24,6 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -153,62 +148,70 @@ public class WordCount extends Configured implements Tool {
         /**
          * Job 4: PageRank
          */
-        try {
-            /**
-             * Read number of nodes from the output of last job
-             */
-            Configuration conf4 = new Configuration();
-            Path path = new Path((args[1] + "/" + timeStamp + "/job3"));
-            FileSystem fs = path.getFileSystem(conf4);
-            RemoteIterator<LocatedFileStatus> ri = fs.listFiles(path, true);
+        for (int i = 1; i < 9; i++) {
+            try {
+                Configuration conf4 = new Configuration();
+//                if (i == 1) {
+                /**
+                 * Read number of nodes from the output of job 3 : pageCount
+                 */
+                Path path = new Path((args[1] + "/" + timeStamp + "/job3"));
+                FileSystem fs = path.getFileSystem(conf4);
+                RemoteIterator<LocatedFileStatus> ri = fs.listFiles(path, true);
 
-            int n = 0;
-            Pattern pt = Pattern.compile("(\\d+)");
-            while (ri.hasNext()) {
-                LocatedFileStatus lfs = ri.next();
-                if (lfs.isFile() && n == 0) {
-                    FSDataInputStream inputStream = fs.open(lfs.getPath());
-                    BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
-                    String s = null;
-                    while ((s = br.readLine()) != null) {
-                        Matcher mt = pt.matcher(s);
-                        if (mt.find()) {
-                            n = new Integer(mt.group(1));
-                            break;
+                int n = 0;
+                Pattern pt = Pattern.compile("(\\d+)");
+                while (ri.hasNext()) {
+                    LocatedFileStatus lfs = ri.next();
+                    if (lfs.isFile() && n == 0) {
+                        FSDataInputStream inputStream = fs.open(lfs.getPath());
+                        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+                        String s = null;
+                        while ((s = br.readLine()) != null) {
+                            Matcher mt = pt.matcher(s);
+                            if (mt.find()) {
+                                n = new Integer(mt.group(1));
+                                break;
+                            }
                         }
                     }
                 }
+                /**
+                 * Done reading number of nodes, make it available to MapReduce
+                 * job key: N
+                 */
+                conf4.setInt("N", n);
+//                }
+
+                Job job4 = Job.getInstance(conf4);
+                job4.setJarByClass(WordCount.class);
+
+                // specify a mapper
+                job4.setMapperClass(PageRankMapper.class);
+
+                // specify a reducer
+                job4.setReducerClass(PageRankReducer.class);
+
+                // specify output types
+                job4.setOutputKeyClass(Text.class);
+                job4.setOutputValueClass(Text.class);
+
+                // specify input and output DIRECTORIES
+                if (i == 1) {
+                    FileInputFormat.addInputPath(job4, new Path((args[1] + "/" + timeStamp + "/job2")));
+                } else {
+                    FileInputFormat.addInputPath(job4, new Path((args[1] + "/" + timeStamp + "/job4/" + (i - 1))));
+                }
+                job4.setInputFormatClass(TextInputFormat.class);
+
+                FileOutputFormat.setOutputPath(job4, new Path((args[1] + "/" + timeStamp + "/job4/" + i)));
+                job4.setOutputFormatClass(TextOutputFormat.class);
+                job4.waitForCompletion(true);
+            } catch (InterruptedException | ClassNotFoundException | IOException ex) {
+                Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+                System.err.println("Error during mapreduce job4.");
+                return 2;
             }
-            /**
-             * Done reading number of nodes, make it available to MapReduce job
-             * key: N
-             */
-            conf4.setInt("N", n);
-
-            Job job4 = Job.getInstance(conf4);
-            job4.setJarByClass(WordCount.class);
-
-            // specify a mapper
-            job4.setMapperClass(PageRankMapper.class);
-
-            // specify a reducer
-            job4.setReducerClass(PageRankReducer.class);
-
-            // specify output types
-            job4.setOutputKeyClass(Text.class);
-            job4.setOutputValueClass(Text.class);
-
-            // specify input and output DIRECTORIES
-            FileInputFormat.addInputPath(job4, new Path((args[1] + "/" + timeStamp + "/job2")));
-            job4.setInputFormatClass(TextInputFormat.class);
-
-            FileOutputFormat.setOutputPath(job4, new Path((args[1] + "/" + timeStamp + "/job4")));
-            job4.setOutputFormatClass(TextOutputFormat.class);
-            job4.waitForCompletion(true);
-        } catch (InterruptedException | ClassNotFoundException | IOException ex) {
-            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
-            System.err.println("Error during mapreduce job4.");
-            return 2;
         }
         /**
          * Job 5: Sort
@@ -237,7 +240,7 @@ public class WordCount extends Configured implements Tool {
             job5.setOutputValueClass(DoubleWritable.class);
 
             // specify input and output DIRECTORIES
-            FileInputFormat.addInputPath(job5, new Path((args[1] + "/" + timeStamp + "/job4")));
+            FileInputFormat.addInputPath(job5, new Path((args[1] + "/" + timeStamp + "/job4/8")));
             job5.setInputFormatClass(TextInputFormat.class);
 
             FileOutputFormat.setOutputPath(job5, new Path((args[1] + "/" + timeStamp + "/job5")));

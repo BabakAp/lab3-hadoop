@@ -32,7 +32,7 @@ public class PageRankReducer extends Reducer<Text, Text, Text, Text> {
              */
             if (ss.length > 1) {
                 for (int i = 1; i < ss.length; i++) {
-                    outGraph += " " + ss[1];
+                    outGraph += " " + ss[i];
                 }
             }
             /**
@@ -44,9 +44,10 @@ public class PageRankReducer extends Reducer<Text, Text, Text, Text> {
             }
         }
         outGraph = outGraph.trim();
+        if (!outGraph.isEmpty()) {
+            outGraph = " " + outGraph;
+        }
 //        context.write(key, new Text("_!" + new DecimalFormat("#0.0000000").format(newPageRank) + " " + outGraph));
-        context.write(key, new Text("_!" + newPageRank + " " + outGraph));
+        context.write(key, new Text("_!" + newPageRank + "" + outGraph));
     }
-    //TODO: Move this to main class.
-    //conf.set("mapred.textoutputformat.separator", "=");
 }
