@@ -41,7 +41,8 @@ public class WordCount extends Configured implements Tool {
 
     @Override
     public int run(String args[]) {
-        long timeStamp = new Date().getTime();
+        String tmp = "/tmp/" + new Date().getTime();
+//        long timeStamp = new Date().getTime();
         try {
             /**
              * Job 1: Parse XML input and read title,links
@@ -67,7 +68,7 @@ public class WordCount extends Configured implements Tool {
             FileInputFormat.addInputPath(job, new Path(args[0]));
             job.setInputFormatClass(XmlInputFormat.class);
 
-            FileOutputFormat.setOutputPath(job, new Path((args[1] + "/" + timeStamp + "/job1")));
+            FileOutputFormat.setOutputPath(job, new Path((args[1] + tmp + "/job1")));
             job.setOutputFormatClass(TextOutputFormat.class);
 
             job.waitForCompletion(true);
@@ -96,10 +97,10 @@ public class WordCount extends Configured implements Tool {
             job2.setOutputValueClass(Text.class);
 
             // specify input and output DIRECTORIES
-            FileInputFormat.addInputPath(job2, new Path((args[1] + "/" + timeStamp + "/job1")));
+            FileInputFormat.addInputPath(job2, new Path((args[1] + tmp + "/job1")));
             job2.setInputFormatClass(TextInputFormat.class);
 
-            FileOutputFormat.setOutputPath(job2, new Path((args[1] + "/" + timeStamp + "/job2")));
+            FileOutputFormat.setOutputPath(job2, new Path((args[1] + tmp + "/job2")));
             job2.setOutputFormatClass(TextOutputFormat.class);
 
             job2.waitForCompletion(true);
@@ -133,10 +134,10 @@ public class WordCount extends Configured implements Tool {
             job3.setOutputValueClass(IntWritable.class);
 
             // specify input and output DIRECTORIES
-            FileInputFormat.addInputPath(job3, new Path((args[1] + "/" + timeStamp + "/job2")));
+            FileInputFormat.addInputPath(job3, new Path((args[1] + tmp + "/job2")));
             job3.setInputFormatClass(TextInputFormat.class);
 
-            FileOutputFormat.setOutputPath(job3, new Path((args[1] + "/" + timeStamp + "/job3")));
+            FileOutputFormat.setOutputPath(job3, new Path((args[1] + tmp + "/job3")));
             job3.setOutputFormatClass(TextOutputFormat.class);
 
             job3.waitForCompletion(true);
@@ -154,7 +155,7 @@ public class WordCount extends Configured implements Tool {
                 /**
                  * Read number of nodes from the output of job 3 : pageCount
                  */
-                Path path = new Path((args[1] + "/" + timeStamp + "/job3"));
+                Path path = new Path((args[1] + tmp + "/job3"));
                 FileSystem fs = path.getFileSystem(conf4);
                 RemoteIterator<LocatedFileStatus> ri = fs.listFiles(path, true);
 
@@ -196,13 +197,13 @@ public class WordCount extends Configured implements Tool {
 
                 // specify input and output DIRECTORIES
                 if (i == 1) {
-                    FileInputFormat.addInputPath(job4, new Path((args[1] + "/" + timeStamp + "/job2")));
+                    FileInputFormat.addInputPath(job4, new Path((args[1] + tmp + "/job2")));
                 } else {
-                    FileInputFormat.addInputPath(job4, new Path((args[1] + "/" + timeStamp + "/job4/" + (i - 1))));
+                    FileInputFormat.addInputPath(job4, new Path((args[1] + tmp + "/job4/" + (i - 1))));
                 }
                 job4.setInputFormatClass(TextInputFormat.class);
 
-                FileOutputFormat.setOutputPath(job4, new Path((args[1] + "/" + timeStamp + "/job4/" + i)));
+                FileOutputFormat.setOutputPath(job4, new Path((args[1] + tmp + "/job4/" + i)));
                 job4.setOutputFormatClass(TextOutputFormat.class);
                 job4.waitForCompletion(true);
             } catch (InterruptedException | ClassNotFoundException | IOException ex) {
@@ -241,10 +242,10 @@ public class WordCount extends Configured implements Tool {
 
                 // specify input and output DIRECTORIES
                 int y = 7 * i + 1;
-                FileInputFormat.addInputPath(job5, new Path((args[1] + "/" + timeStamp + "/job4/" + y)));
+                FileInputFormat.addInputPath(job5, new Path((args[1] + tmp + "/job4/" + y)));
                 job5.setInputFormatClass(TextInputFormat.class);
 
-                FileOutputFormat.setOutputPath(job5, new Path((args[1] + "/" + timeStamp + "/job5/" + y)));
+                FileOutputFormat.setOutputPath(job5, new Path((args[1] + tmp + "/job5/" + y)));
                 job5.setOutputFormatClass(TextOutputFormat.class);
 
                 returnCode = job5.waitForCompletion(true) ? 0 : 1;
@@ -264,10 +265,10 @@ public class WordCount extends Configured implements Tool {
         try {
             Configuration conf = new Configuration();
 
-            Path outLinkGraph = new Path((args[1] + "/" + timeStamp + "/job2/part-r-00000"));
+            Path outLinkGraph = new Path((args[1] + tmp + "/job2/part-r-00000"));
             FileSystem outLinkGraphFS = outLinkGraph.getFileSystem(conf);
 
-            Path output = new Path(args[1] + "/PageRank.outlink.out");
+            Path output = new Path(args[1] + "/results/PageRank.outlink.out");
             FileSystem outputFS = output.getFileSystem(conf);
             org.apache.hadoop.fs.FileUtil.copy(outLinkGraphFS, outLinkGraph, outputFS, output, false, true, conf);
         } catch (IOException ex) {
@@ -282,10 +283,10 @@ public class WordCount extends Configured implements Tool {
         try {
             Configuration conf = new Configuration();
 
-            Path outLinkGraph = new Path((args[1] + "/" + timeStamp + "/job3/part-r-00000"));
+            Path outLinkGraph = new Path((args[1] + tmp + "/job3/part-r-00000"));
             FileSystem outLinkGraphFS = outLinkGraph.getFileSystem(conf);
 
-            Path output = new Path(args[1] + "/PageRank.n.out");
+            Path output = new Path(args[1] + "/results/PageRank.n.out");
             FileSystem outputFS = output.getFileSystem(conf);
             org.apache.hadoop.fs.FileUtil.copy(outLinkGraphFS, outLinkGraph, outputFS, output, false, true, conf);
         } catch (IOException ex) {
@@ -300,10 +301,10 @@ public class WordCount extends Configured implements Tool {
         try {
             Configuration conf = new Configuration();
 
-            Path outLinkGraph = new Path((args[1] + "/" + timeStamp + "/job5/1/part-r-00000"));
+            Path outLinkGraph = new Path((args[1] + tmp + "/job5/1/part-r-00000"));
             FileSystem outLinkGraphFS = outLinkGraph.getFileSystem(conf);
 
-            Path output = new Path(args[1] + "/PageRank.iter1.out");
+            Path output = new Path(args[1] + "/results/PageRank.iter1.out");
             FileSystem outputFS = output.getFileSystem(conf);
             org.apache.hadoop.fs.FileUtil.copy(outLinkGraphFS, outLinkGraph, outputFS, output, false, true, conf);
         } catch (IOException ex) {
@@ -318,10 +319,10 @@ public class WordCount extends Configured implements Tool {
         try {
             Configuration conf = new Configuration();
 
-            Path outLinkGraph = new Path((args[1] + "/" + timeStamp + "/job5/8/part-r-00000"));
+            Path outLinkGraph = new Path((args[1] + tmp + "/job5/8/part-r-00000"));
             FileSystem outLinkGraphFS = outLinkGraph.getFileSystem(conf);
 
-            Path output = new Path(args[1] + "/PageRank.iter8.out");
+            Path output = new Path(args[1] + "/results/PageRank.iter8.out");
             FileSystem outputFS = output.getFileSystem(conf);
             org.apache.hadoop.fs.FileUtil.copy(outLinkGraphFS, outLinkGraph, outputFS, output, false, true, conf);
         } catch (IOException ex) {
