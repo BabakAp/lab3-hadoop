@@ -6,6 +6,8 @@
 package com.bark.hadoop.lab3;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -30,9 +32,12 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
         test = test.replaceAll("\t", " ");
         test = test.replaceFirst(" ", "\t");
 
-        double basePageRank = 0;
+        MathContext mc = new MathContext(19);
+//        double basePageRank = 0;
+        BigDecimal basePageRank = new BigDecimal(0, mc);
         boolean hasPageRank = false;
-        double pageRank = 0;
+//        double pageRank = 0;
+        BigDecimal pageRank = new BigDecimal(0, mc);
         /**
          * Pattern to distinguish our inserted numbers from numbers in titles
          * is: _!(numbers.numbers)
@@ -40,7 +45,8 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
         Pattern pt = Pattern.compile("(_!\\d+.\\S+)");
         Matcher mt = pt.matcher(test);
         if (mt.find()) {
-            pageRank = Double.parseDouble(mt.group(1).substring(2));
+//            pageRank = Double.parseDouble(mt.group(1).substring(2));
+            pageRank = new BigDecimal(mt.group(1).substring(2), mc);
             hasPageRank = true;
         }
         /**
@@ -48,7 +54,9 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
          */
         if (!hasPageRank) {
             try {
-                pageRank = 1d / (context.getConfiguration().getInt("N", 0));
+//                pageRank = 1d / (context.getConfiguration().getInt("N", 0));
+                pageRank = new BigDecimal(1, mc);
+                pageRank = pageRank.divide(new BigDecimal((context.getConfiguration().getInt("N", 0)), mc), mc);
             } catch (ArithmeticException ae) {
                 /**
                  * Catch division by zero (if 'N' was not set)
@@ -66,7 +74,9 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
         /**
          * d = 0.85
          */
-        basePageRank = (1 - 0.85) / (context.getConfiguration().getInt("N", 0));
+//        basePageRank = (1 - 0.85) / (context.getConfiguration().getInt("N", 0));
+        basePageRank = new BigDecimal(0.15, mc);
+        basePageRank = basePageRank.divide(new BigDecimal((context.getConfiguration().getInt("N", 0)), mc), mc);
         String output = "";
         output += "_!" + basePageRank;
         if (split.length > 1) {
@@ -95,11 +105,16 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
             /**
              * d = 0.85
              */
-            pageRank *= 0.85;
+//            pageRank *= 0.85;
             /**
              * Divide pageRank over number of outLinks
              */
-            pageRank /= hasPageRank ? (outlinks.length - 1) : outlinks.length;
+//            pageRank /= hasPageRank ? (outlinks.length - 1) : outlinks.length;
+            if (hasPageRank) {
+                pageRank = pageRank.divide(new BigDecimal((outlinks.length - 1), mc), mc);
+            } else {
+                pageRank = pageRank.divide(new BigDecimal(outlinks.length, mc), mc);
+            }
             for (int i = hasPageRank ? 1 : 0; i < outlinks.length; i++) {
                 context.write(new Text(outlinks[i]), new Text("_!" + pageRank));
             }

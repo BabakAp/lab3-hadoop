@@ -6,6 +6,8 @@
 package com.bark.hadoop.lab3;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;

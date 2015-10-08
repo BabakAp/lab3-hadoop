@@ -6,6 +6,8 @@
 package com.bark.hadoop.lab3;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.hadoop.io.DoubleWritable;
@@ -20,8 +22,14 @@ public class SortMapper extends Mapper<LongWritable, Text, DoubleWritable, Text>
         double pageRank = 0;
         Pattern pt = Pattern.compile("(_!\\d+.\\S+)");
         Matcher mt = pt.matcher(value.toString());
+        String kossher = "";
         if (mt.find()) {
-            pageRank = Double.parseDouble(mt.group(1).substring(2));
+//            pageRank = Double.parseDouble(mt.group(1).substring(2));
+            kossher = mt.group(1).substring(2);
+            pageRank = new BigDecimal(mt.group(1).substring(2)).doubleValue();
+        }
+        if (value.toString().contains("Germany")) {
+            System.out.println(kossher);
         }
         double minThreshold = 5d / (context.getConfiguration().getInt("N", 0));
         if (pageRank >= minThreshold) {
