@@ -28,9 +28,6 @@ public class SortMapper extends Mapper<LongWritable, Text, DoubleWritable, Text>
             kossher = mt.group(1).substring(2);
             pageRank = new BigDecimal(mt.group(1).substring(2)).doubleValue();
         }
-        if (value.toString().contains("Germany")) {
-            System.out.println(kossher);
-        }
         double minThreshold = 5d / (context.getConfiguration().getInt("N", 0));
         if (pageRank >= minThreshold) {
             context.write(new DoubleWritable(pageRank), new Text(value.toString().split("\t")[0]));
