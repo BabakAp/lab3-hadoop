@@ -151,7 +151,6 @@ public class WordCount extends Configured implements Tool {
         for (int i = 1; i < 9; i++) {
             try {
                 Configuration conf4 = new Configuration();
-//                if (i == 1) {
                 /**
                  * Read number of nodes from the output of job 3 : pageCount
                  */
@@ -181,7 +180,6 @@ public class WordCount extends Configured implements Tool {
                  * job key: N
                  */
                 conf4.setInt("N", n);
-//                }
 
                 Job job4 = Job.getInstance(conf4);
                 job4.setJarByClass(WordCount.class);
@@ -214,43 +212,123 @@ public class WordCount extends Configured implements Tool {
             }
         }
         /**
-         * Job 5: Sort
+         * Job 5: Sort iteration 1 and iteration 8
+         */
+        int returnCode = 0;
+        for (int i = 0; i < 2; i++) {
+            try {
+                Configuration conf5 = new Configuration();
+
+                Job job5 = Job.getInstance(conf5);
+                /**
+                 * one reducer only
+                 */
+                job5.setNumReduceTasks(1);
+                job5.setSortComparatorClass(MyWritableComparator.class);
+                job5.setJarByClass(WordCount.class);
+
+                // specify a mapper
+                job5.setMapperClass(SortMapper.class);
+                job5.setMapOutputKeyClass(DoubleWritable.class);
+                job5.setMapOutputValueClass(Text.class);
+
+                // specify a reducer
+                job5.setReducerClass(SortReducer.class);
+
+                // specify output types
+                job5.setOutputKeyClass(Text.class);
+                job5.setOutputValueClass(DoubleWritable.class);
+
+                // specify input and output DIRECTORIES
+                int y = 7 * i + 1;
+                FileInputFormat.addInputPath(job5, new Path((args[1] + "/" + timeStamp + "/job4/" + y)));
+                job5.setInputFormatClass(TextInputFormat.class);
+
+                FileOutputFormat.setOutputPath(job5, new Path((args[1] + "/" + timeStamp + "/job5/" + y)));
+                job5.setOutputFormatClass(TextOutputFormat.class);
+
+                returnCode = job5.waitForCompletion(true) ? 0 : 1;
+            } catch (InterruptedException | ClassNotFoundException | IOException ex) {
+                Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+                System.err.println("Error during mapreduce job5.");
+                return 2;
+            }
+        }
+        /**
+         * Copy necessary output files to args[1]
+         */
+
+        /**
+         * Rename and copy OutLinkGraph
          */
         try {
-            Configuration conf5 = new Configuration();
+            Configuration conf = new Configuration();
 
-            Job job5 = Job.getInstance(conf5);
-            /**
-             * one reducer only
-             */
-            job5.setNumReduceTasks(1);
-            job5.setSortComparatorClass(MyWritableComparator.class);
-            job5.setJarByClass(WordCount.class);
+            Path outLinkGraph = new Path((args[1] + "/" + timeStamp + "/job2/part-r-00000"));
+            FileSystem outLinkGraphFS = outLinkGraph.getFileSystem(conf);
 
-            // specify a mapper
-            job5.setMapperClass(SortMapper.class);
-            job5.setMapOutputKeyClass(DoubleWritable.class);
-            job5.setMapOutputValueClass(Text.class);
-
-            // specify a reducer
-            job5.setReducerClass(SortReducer.class);
-
-            // specify output types
-            job5.setOutputKeyClass(Text.class);
-            job5.setOutputValueClass(DoubleWritable.class);
-
-            // specify input and output DIRECTORIES
-            FileInputFormat.addInputPath(job5, new Path((args[1] + "/" + timeStamp + "/job4/8")));
-            job5.setInputFormatClass(TextInputFormat.class);
-
-            FileOutputFormat.setOutputPath(job5, new Path((args[1] + "/" + timeStamp + "/job5")));
-            job5.setOutputFormatClass(TextOutputFormat.class);
-
-            return (job5.waitForCompletion(true) ? 0 : 1);
-        } catch (InterruptedException | ClassNotFoundException | IOException ex) {
+            Path output = new Path(args[1] + "/PageRank.outlink.out");
+            FileSystem outputFS = output.getFileSystem(conf);
+            org.apache.hadoop.fs.FileUtil.copy(outLinkGraphFS, outLinkGraph, outputFS, output, false, true, conf);
+        } catch (IOException ex) {
             Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
-            System.err.println("Error during mapreduce job5.");
+            System.err.println("Error while copying results.");
             return 2;
         }
+
+        /**
+         * Rename and copy total number of pages
+         */
+        try {
+            Configuration conf = new Configuration();
+
+            Path outLinkGraph = new Path((args[1] + "/" + timeStamp + "/job3/part-r-00000"));
+            FileSystem outLinkGraphFS = outLinkGraph.getFileSystem(conf);
+
+            Path output = new Path(args[1] + "/PageRank.n.out");
+            FileSystem outputFS = output.getFileSystem(conf);
+            org.apache.hadoop.fs.FileUtil.copy(outLinkGraphFS, outLinkGraph, outputFS, output, false, true, conf);
+        } catch (IOException ex) {
+            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            System.err.println("Error while copying results.");
+            return 2;
+        }
+
+        /**
+         * Rename and copy iteration 1
+         */
+        try {
+            Configuration conf = new Configuration();
+
+            Path outLinkGraph = new Path((args[1] + "/" + timeStamp + "/job5/1/part-r-00000"));
+            FileSystem outLinkGraphFS = outLinkGraph.getFileSystem(conf);
+
+            Path output = new Path(args[1] + "/PageRank.iter1.out");
+            FileSystem outputFS = output.getFileSystem(conf);
+            org.apache.hadoop.fs.FileUtil.copy(outLinkGraphFS, outLinkGraph, outputFS, output, false, true, conf);
+        } catch (IOException ex) {
+            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            System.err.println("Error while copying results.");
+            return 2;
+        }
+
+        /**
+         * Rename and copy iteration 8
+         */
+        try {
+            Configuration conf = new Configuration();
+
+            Path outLinkGraph = new Path((args[1] + "/" + timeStamp + "/job5/8/part-r-00000"));
+            FileSystem outLinkGraphFS = outLinkGraph.getFileSystem(conf);
+
+            Path output = new Path(args[1] + "/PageRank.iter8.out");
+            FileSystem outputFS = output.getFileSystem(conf);
+            org.apache.hadoop.fs.FileUtil.copy(outLinkGraphFS, outLinkGraph, outputFS, output, false, true, conf);
+        } catch (IOException ex) {
+            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            System.err.println("Error while copying results.");
+            return 2;
+        }
+        return returnCode;
     }
 }

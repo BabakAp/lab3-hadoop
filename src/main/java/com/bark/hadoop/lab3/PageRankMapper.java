@@ -27,6 +27,9 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
          * format of reducer of last iteration), do stuff... \n
          */
         String test = value.toString();
+        test = test.replaceAll("\t", " ");
+        test = test.replaceFirst(" ", "\t");
+
         double basePageRank = 0;
         boolean hasPageRank = false;
         double pageRank = 0;

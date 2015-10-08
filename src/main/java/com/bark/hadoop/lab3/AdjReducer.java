@@ -19,7 +19,7 @@ public class AdjReducer extends Reducer<Text, Text, Text, Text> {
         for (Text t : values) {
             String tString = t.toString();
             if (!tString.equals("!")) {
-                line += " " + tString;
+                line += "\t" + tString;
             }
         }
         line = line.trim();

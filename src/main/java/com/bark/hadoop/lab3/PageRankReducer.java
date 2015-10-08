@@ -48,6 +48,12 @@ public class PageRankReducer extends Reducer<Text, Text, Text, Text> {
             outGraph = " " + outGraph;
         }
 //        context.write(key, new Text("_!" + new DecimalFormat("#0.0000000").format(newPageRank) + " " + outGraph));
-        context.write(key, new Text("_!" + newPageRank + "" + outGraph));
+        /**
+         * Only write entries with PageRank >= 5/N
+         */
+        double minThreshold = 5d / (context.getConfiguration().getInt("N", 0));
+        if (newPageRank >= minThreshold) {
+            context.write(key, new Text("_!" + newPageRank + "" + outGraph));
+        }
     }
 }
