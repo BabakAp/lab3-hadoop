@@ -18,7 +18,7 @@ public class SortMapper extends Mapper<LongWritable, Text, DoubleWritable, Text>
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         double pageRank = 0;
-        Pattern pt = Pattern.compile("(_!\\d+.\\d+)");
+        Pattern pt = Pattern.compile("(_!\\d+.\\S+)");
         Matcher mt = pt.matcher(value.toString());
         if (mt.find()) {
             pageRank = Double.parseDouble(mt.group(1).substring(2));

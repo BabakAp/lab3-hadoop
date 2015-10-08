@@ -37,7 +37,7 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
          * Pattern to distinguish our inserted numbers from numbers in titles
          * is: _!(numbers.numbers)
          */
-        Pattern pt = Pattern.compile("(_!\\d+.\\d+)");
+        Pattern pt = Pattern.compile("(_!\\d+.\\S+)");
         Matcher mt = pt.matcher(test);
         if (mt.find()) {
             pageRank = Double.parseDouble(mt.group(1).substring(2));

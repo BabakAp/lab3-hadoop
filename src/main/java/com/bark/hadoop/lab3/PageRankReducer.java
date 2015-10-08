@@ -22,7 +22,7 @@ public class PageRankReducer extends Reducer<Text, Text, Text, Text> {
          * Pattern to distinguish our inserted numbers from numbers in titles
          * is: _!(numbers.numbers)
          */
-        Pattern pt = Pattern.compile("(_!\\d+.\\d+)");
+        Pattern pt = Pattern.compile("(_!\\d+.\\S+)");
         String outGraph = "";
         for (Text t : values) {
             String s = t.toString();
