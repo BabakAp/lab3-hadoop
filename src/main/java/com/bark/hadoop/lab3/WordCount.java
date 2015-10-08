@@ -116,7 +116,11 @@ public class WordCount extends Configured implements Tool {
          */
         try {
             Configuration conf3 = new Configuration();
-            conf3.set("mapred.textoutputformat.separator", "=");
+            /**
+             * Change output separator to "=" instead of default \t for this job
+             */
+//            conf3.set("mapred.textoutputformat.separator", "=");
+            conf3.set("mapreduce.output.textoutputformat.separator", "=");
 
             Job job3 = Job.getInstance(conf3);
             job3.setJarByClass(WordCount.class);
@@ -198,11 +202,48 @@ public class WordCount extends Configured implements Tool {
 
             FileOutputFormat.setOutputPath(job4, new Path((args[1] + "/" + timeStamp + "/job4")));
             job4.setOutputFormatClass(TextOutputFormat.class);
-
-            return (job4.waitForCompletion(true) ? 0 : 1);
+            job4.waitForCompletion(true);
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
             System.err.println("Error during mapreduce job4.");
+            return 2;
+        }
+        /**
+         * Job 5: Sort
+         */
+        try {
+            Configuration conf5 = new Configuration();
+
+            Job job5 = Job.getInstance(conf5);
+            /**
+             * one reducer only
+             */
+            job5.setNumReduceTasks(1);
+            job5.setJarByClass(WordCount.class);
+
+            // specify a mapper
+            job5.setMapperClass(SortMapper.class);
+            job5.setMapOutputKeyClass(DoubleWritable.class);
+            job5.setMapOutputValueClass(Text.class);
+
+            // specify a reducer
+            job5.setReducerClass(SortReducer.class);
+
+            // specify output types
+            job5.setOutputKeyClass(Text.class);
+            job5.setOutputValueClass(DoubleWritable.class);
+
+            // specify input and output DIRECTORIES
+            FileInputFormat.addInputPath(job5, new Path((args[1] + "/" + timeStamp + "/job4")));
+            job5.setInputFormatClass(TextInputFormat.class);
+
+            FileOutputFormat.setOutputPath(job5, new Path((args[1] + "/" + timeStamp + "/job5")));
+            job5.setOutputFormatClass(TextOutputFormat.class);
+
+            return (job5.waitForCompletion(true) ? 0 : 1);
+        } catch (InterruptedException | ClassNotFoundException | IOException ex) {
+            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            System.err.println("Error during mapreduce job5.");
             return 2;
         }
     }
