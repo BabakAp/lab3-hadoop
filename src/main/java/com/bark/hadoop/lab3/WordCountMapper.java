@@ -61,7 +61,10 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
             Pattern p = Pattern.compile("\\[\\[(.*?)\\]\\]");
             Matcher m = p.matcher(textData);
             while (m.find()) {
-                links += " " + (m.group(1)).trim().replaceAll(" ", "_").split("\\|")[0];
+                String newlink = (m.group(1)).trim().replaceAll(" ", "_").split("\\|")[0];
+                if (!title.equals(newlink)) {
+                    links += " " + newlink;
+                }
             }
             links = links.trim();
 //            links = links.toLowerCase();
@@ -70,7 +73,8 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
              */
             context.write(new Text(title), new Text("!"));
             //TODO: "it should not contain a link which points to the page itself" How are we gonna do this!? <title>AccessibleComputing</title> while the link is [[Computer accessibility]]!
-//            links = links.replaceAll(title, "");
+            links = links.replaceAll(title, "");
+            links = links.trim();
             String[] myLinks = links.split(" ");
             for (int i = 0; i < myLinks.length; i++) {
 //                Write reverse? (link,title) pairs (multiple writes are ok)
