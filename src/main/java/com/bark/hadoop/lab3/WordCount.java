@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -27,6 +28,7 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -219,6 +221,7 @@ public class WordCount extends Configured implements Tool {
              * one reducer only
              */
             job5.setNumReduceTasks(1);
+            job5.setSortComparatorClass(MyWritableComparator.class);
             job5.setJarByClass(WordCount.class);
 
             // specify a mapper

@@ -20,9 +20,7 @@ public class SortMapper extends Mapper<LongWritable, Text, DoubleWritable, Text>
         double pageRank = 0;
         Pattern pt = Pattern.compile("(_!\\d+.\\d+)");
         Matcher mt = pt.matcher(value.toString());
-        System.out.println(value.toString());
         if (mt.find()) {
-            System.out.println(mt.group(1));
             pageRank = Double.parseDouble(mt.group(1).substring(2));
         }
         context.write(new DoubleWritable(pageRank), new Text(value.toString().split("\t")[0]));
