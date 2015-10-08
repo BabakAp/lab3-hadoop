@@ -15,7 +15,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
-    
+
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         /**
@@ -30,6 +30,7 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
         String test = value.toString();
         boolean hasPageRank = false;
         double pageRank = 0;
+        double oldPageRank = 0;
         /**
          * Pattern to distinguish our inserted numbers from numbers in titles
          * is: _!(numbers.numbers)
@@ -38,12 +39,17 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
         Matcher mt = pt.matcher(test);
         if (mt.find()) {
             pageRank = Double.parseDouble(mt.group(1).substring(2));
+            oldPageRank = pageRank;
             hasPageRank = true;
         }
-        
+
         if (!hasPageRank) {
             try {
-                pageRank = 1 / (context.getConfiguration().getInt("N", 0));
+                pageRank = 1d / (context.getConfiguration().getInt("N", 0));
+                /**
+                 * d = 0.85
+                 */
+                oldPageRank = (1 - 0.85) / (context.getConfiguration().getInt("N", 0));
             } catch (ArithmeticException ae) {
                 /**
                  * Catch division by zero (if 'N' was not set)
@@ -59,7 +65,7 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
          * Emit this node's oldPageRank and it's adjacency outGraph if not empty
          */
         String output = "";
-        output += "_!" + pageRank;
+        output += "_!" + oldPageRank;
         if (split.length > 1) {
             output += " " + split[1];
         }
@@ -80,11 +86,16 @@ public class PageRankMapper extends Mapper<LongWritable, Text, Text, Text> {
                 return;
             }
             /**
+             * d = 0.85
+             */
+            pageRank *= 0.85;
+            /**
              * Divide pageRank over number of outLinks
              */
             pageRank /= hasPageRank ? (outlinks.length - 1) : outlinks.length;
-            
+
             for (int i = hasPageRank ? 1 : 0; i < outlinks.length; i++) {
+//                System.out.println("");
                 context.write(new Text(outlinks[i]), new Text("_!" + pageRank));
             }
         }

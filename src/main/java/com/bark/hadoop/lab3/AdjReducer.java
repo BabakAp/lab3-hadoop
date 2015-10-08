@@ -22,6 +22,7 @@ public class AdjReducer extends Reducer<Text, Text, Text, Text> {
                 line += " " + tString;
             }
         }
+        line = line.trim();
         context.write(key, new Text(line));
     }
 }

@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -18,7 +19,11 @@ import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -111,6 +116,7 @@ public class WordCount extends Configured implements Tool {
          */
         try {
             Configuration conf3 = new Configuration();
+            conf3.set("mapred.textoutputformat.separator", "=");
 
             Job job3 = Job.getInstance(conf3);
             job3.setJarByClass(WordCount.class);
@@ -142,16 +148,23 @@ public class WordCount extends Configured implements Tool {
          * Job 4: PageRank
          */
         try {
+            /**
+             * Read number of nodes from the output of last job
+             */
             Configuration conf4 = new Configuration();
-            File folder = new File((args[1] + "/" + timeStamp + "/job3"));
-            File[] listOfFiles = folder.listFiles();
+            Path path = new Path((args[1] + "/" + timeStamp + "/job3"));
+            FileSystem fs = path.getFileSystem(conf4);
+            RemoteIterator<LocatedFileStatus> ri = fs.listFiles(path, true);
+
             int n = 0;
-            for (int i = 0; i < listOfFiles.length; i++) {
-                if (listOfFiles[i].isFile() && n == 0) {
-                    BufferedReader br = new BufferedReader(new FileReader(listOfFiles[i]));
-                    String s = "";
+            Pattern pt = Pattern.compile("(\\d+)");
+            while (ri.hasNext()) {
+                LocatedFileStatus lfs = ri.next();
+                if (lfs.isFile() && n == 0) {
+                    FSDataInputStream inputStream = fs.open(lfs.getPath());
+                    BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+                    String s = null;
                     while ((s = br.readLine()) != null) {
-                        Pattern pt = Pattern.compile("(\\d+)");
                         Matcher mt = pt.matcher(s);
                         if (mt.find()) {
                             n = new Integer(mt.group(1));
@@ -160,6 +173,10 @@ public class WordCount extends Configured implements Tool {
                     }
                 }
             }
+            /**
+             * Done reading number of nodes, make it available to MapReduce job
+             * key: N
+             */
             conf4.setInt("N", n);
 
             Job job4 = Job.getInstance(conf4);
@@ -176,7 +193,7 @@ public class WordCount extends Configured implements Tool {
             job4.setOutputValueClass(Text.class);
 
             // specify input and output DIRECTORIES
-            FileInputFormat.addInputPath(job4, new Path((args[1] + "/" + timeStamp + "/job3")));
+            FileInputFormat.addInputPath(job4, new Path((args[1] + "/" + timeStamp + "/job2")));
             job4.setInputFormatClass(TextInputFormat.class);
 
             FileOutputFormat.setOutputPath(job4, new Path((args[1] + "/" + timeStamp + "/job4")));
