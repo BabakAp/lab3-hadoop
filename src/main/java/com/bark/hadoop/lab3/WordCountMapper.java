@@ -7,6 +7,7 @@ package com.bark.hadoop.lab3;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,9 +27,12 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        
+        if (value.toString().contains("nowiki")) {
+            System.out.println("nowiki detected");
+        }
+        String fixed = value.toString().replaceAll("<nowiki />", "");
         try {
-            XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(new ByteArrayInputStream(value.getBytes()));
+            XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(new ByteArrayInputStream(fixed.getBytes()));
             String title = "";
             String links = "";
             String textData = "";
@@ -59,17 +63,20 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
             /**
              * Find type 1 links e.g. [[some text]] and type 2 links [[a|b]]
              */
-            Pattern p = Pattern.compile("\\[\\[([^\\[\\[\\]\\]]*?)\\]\\]");
-            Matcher m = p.matcher(textData);
-            while (m.find()) {
-                String newlink = (m.group(1)).trim().replaceAll(" ", "_").split("\\|")[0];
-                //TODO: "it should not contain a link which points to the page itself"
-                if (!title.equals(newlink)) {
-                    links += " " + newlink;
-                }
+            ArrayList<String> blah = findLinks(textData);
+            for (String s : blah) {
+                links += " " + s.trim().replaceAll(" ", "_").split("\\|")[0];
             }
+//            Pattern p = Pattern.compile("\\[\\[([^\\[\\[\\]\\]]*?)\\]\\]");
+//            Matcher m = p.matcher(textData);
+//            while (m.find()) {
+//                String newlink = (m.group(1)).trim().replaceAll(" ", "_").split("\\|")[0];
+//                //TODO: "it should not contain a link which points to the page itself"
+//                if (!title.equals(newlink)) {
+//                    links += " " + newlink;
+//                }
+//            }
             links = links.trim();
-//            links = links.toLowerCase();
             /**
              * For every title that exists, write the title and "!"
              */
@@ -84,5 +91,57 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
         } catch (XMLStreamException ex) {
             Logger.getLogger(WordCountMapper.class.getName()).log(Level.SEVERE, ex.toString(), ex);
         }
+    }
+
+    /**
+     * @param textData
+     * @param args the command line arguments
+     * @return
+     */
+    public static ArrayList<String> findLinks(String textData) {
+        ArrayList<String> list = new ArrayList<>();
+        int state = 0;
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < textData.length();) {
+            if (state == 0) {
+                if (textData.charAt(i) == '[') {
+                    state = 1;
+                }
+                i++;
+            } else if (state == 1) {
+                if (textData.charAt(i) == '[') {
+                    state = 2;
+                }
+                i++;
+            } else if (state == 2) {
+                if (textData.charAt(i) == '[') {
+                    state = 3;
+                }
+                if (textData.charAt(i) == ']') {
+                    state = 5;
+                }
+                buffer.append(textData.charAt(i));
+                i++;
+            } else if (state == 3) {
+                if (textData.charAt(i) == '[') {
+                    state = 2;
+                    buffer.delete(0, buffer.length());
+                    i++;
+                } else {
+                    state = 2;
+                }
+            } else if (state == 5) {
+                if (textData.charAt(i) == ']') {
+                    buffer.delete(buffer.length() - 1, buffer.length());
+                    state = 0;
+                    list.add(buffer.toString());
+                    buffer.delete(0, buffer.length());
+                    i++;
+                } else {
+                    state = 2;
+                }
+            }
+        }
+        return list;
     }
 }
