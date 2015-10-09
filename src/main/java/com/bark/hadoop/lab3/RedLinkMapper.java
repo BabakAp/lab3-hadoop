@@ -8,6 +8,7 @@ package com.bark.hadoop.lab3;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,7 +62,12 @@ public class RedLinkMapper extends Mapper<LongWritable, Text, Text, Text> {
             /**
              * Find type 1 links e.g. [[some text]] and type 2 links [[a|b]]
              */
-            ArrayList<String> myLinks = findLinks(textData);
+            ArrayList<String> myLinks = new ArrayList<>();
+            try {
+                myLinks = findLinks(textData);
+            } catch (Exception e) {
+                Logger.getLogger(RedLinkMapper.class.getName()).log(Level.SEVERE, e.getMessage(), e);
+            }
 //            for (String s : my) {
 //                links += " " + s.trim().replaceAll(" ", "_").split("\\|")[0];
 //            }
@@ -74,71 +80,43 @@ public class RedLinkMapper extends Mapper<LongWritable, Text, Text, Text> {
 //                    links += " " + newlink;
 //                }
 //            }
-       //     links = links.trim();
+            //     links = links.trim();
             /**
              * For every title that exists, write the title and "!"
              */
             context.write(new Text(title), new Text("!"));
 //            links = links.replaceAll(title, "");
-  //          links = links.trim();
-   //         String[] myLinks = links.split(" ");
-            for (int i = 0; i < myLinks.size(); i++)  {
+            //          links = links.trim();
+            //         String[] myLinks = links.split(" ");
+            for (int i = 0; i < myLinks.size(); i++) {
 //                Write reverse? (link,title) pairs (multiple writes are ok)
-                context.write(new Text(myLinks.get(i).replaceAll(" ", "_").split("\\|")[0]), new Text(title));
+                String temp = myLinks.get(i).trim().replaceAll(" ", "_").split("\\|")[0];
+                if (!title.equals(temp)) {
+                    context.write(new Text(temp), new Text(title));
+                }
+
             }
         } catch (XMLStreamException ex) {
             Logger.getLogger(RedLinkMapper.class.getName()).log(Level.SEVERE, ex.toString(), ex);
         }
     }
 
-    /**
-     * @param textData
-     * @param args the command line arguments
-     * @return
-     */
-    public static ArrayList<String> findLinks(String textData) {
+    public static ArrayList<String> findLinks(String data) {
         ArrayList<String> list = new ArrayList<>();
-        int state = 0;
-        StringBuffer buffer = new StringBuffer();
-        for (int i = 0; i < textData.length();) {
-            if (state == 0) {
-                if (textData.charAt(i) == '[') {
-                    state = 1;
-                }
-                i++;
-            } else if (state == 1) {
-                if (textData.charAt(i) == '[') {
-                    state = 2;
-                }
-                i++;
-            } else if (state == 2) {
-                if (textData.charAt(i) == '[') {
-                    state = 3;
-                }
-                if (textData.charAt(i) == ']') {
-                    state = 5;
-                }
-                buffer.append(textData.charAt(i));
-                i++;
-            } else if (state == 3) {
-                if (textData.charAt(i) == '[') {
-                    state = 2;
-                    buffer.delete(0, buffer.length());
-                    i++;
-                } else {
-                    state = 2;
-                }
-            } else if (state == 5) {
-                if (textData.charAt(i) == ']') {
-                    buffer.delete(buffer.length() - 1, buffer.length());
-                    state = 0;
-                    list.add(buffer.toString());
-                    buffer.delete(0, buffer.length());
-                    i++;
-                } else {
-                    state = 2;
-                }
+        Stack<Integer> s = new Stack<>();
+        int i = 0;
+        while (i < data.length() - 1) {
+            if (data.charAt(i) == '[' && data.charAt(i + 1) == '[') {
+                s.push(i + 2);
+                i += 2;
+                continue;
             }
+            if (data.charAt(i) == ']' && data.charAt(i + 1) == ']' && !s.empty()) {
+                list.add(data.substring(s.pop(), i));
+                i += 2;
+                continue;
+            }
+            i += 1;
         }
         return list;
     }

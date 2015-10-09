@@ -14,7 +14,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.bark.hadoop.lab3.WordCount</mainClass>
+                            <mainClass>com.bark.hadoop.lab3.PageRank</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
