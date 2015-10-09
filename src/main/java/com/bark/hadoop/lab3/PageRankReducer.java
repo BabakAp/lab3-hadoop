@@ -19,9 +19,9 @@ public class PageRankReducer extends Reducer<Text, Text, Text, Text> {
 
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-//        double newPageRank = 0;
-        MathContext mc = new MathContext(19);
-        BigDecimal bd = new BigDecimal(0, mc);
+        double newPageRank = 0;
+//        MathContext mc = new MathContext(19);
+//        BigDecimal bd = new BigDecimal(0, mc);
         /**
          * Pattern to distinguish our inserted numbers from numbers in titles
          * is: _!(numbers.numbers)
@@ -44,8 +44,8 @@ public class PageRankReducer extends Reducer<Text, Text, Text, Text> {
              */
             Matcher mt = pt.matcher(s);
             if (mt.find()) {
-//                newPageRank += Double.parseDouble(mt.group(1).substring(2));
-                bd = bd.add(new BigDecimal(mt.group(1).substring(2), mc), mc);
+                newPageRank += Double.parseDouble(mt.group(1).substring(2));
+//                bd = bd.add(new BigDecimal(mt.group(1).substring(2), mc), mc);
             }
         }
         outGraph = outGraph.trim();
@@ -54,14 +54,14 @@ public class PageRankReducer extends Reducer<Text, Text, Text, Text> {
         }
 //        TODO: here or mapper?!
 //        newPageRank *= 0.85;
-        bd = bd.multiply(new BigDecimal(0.85, mc), mc);
+//        bd = bd.multiply(new BigDecimal(0.85, mc), mc);
 //        context.write(key, new Text("_!" + new DecimalFormat("#0.0000000").format(newPageRank) + " " + outGraph));
         /**
          * Only write entries with PageRank >= 5/N
          */
 //        double minThreshold = 5d / (context.getConfiguration().getInt("N", 0));
 //        if (newPageRank >= minThreshold) {
-        context.write(key, new Text("_!" + bd + "" + outGraph));
+        context.write(key, new Text("_!" + newPageRank + "" + outGraph));
 //        }
     }
 }

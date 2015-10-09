@@ -19,15 +19,14 @@ public class SortMapper extends Mapper<LongWritable, Text, DoubleWritable, Text>
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        MathContext mc = new MathContext(19);
+//        MathContext mc = new MathContext(19);
         double pageRank = 0;
         Pattern pt = Pattern.compile("(_!\\d+.\\S+)");
         Matcher mt = pt.matcher(value.toString());
 //        String kossher = "";
         if (mt.find()) {
-//            pageRank = Double.parseDouble(mt.group(1).substring(2));
-//            kossher = mt.group(1).substring(2);
-            pageRank = new BigDecimal(mt.group(1).substring(2), mc).doubleValue();
+            pageRank = Double.parseDouble(mt.group(1).substring(2));
+//            pageRank = new BigDecimal(mt.group(1).substring(2), mc).doubleValue();
         }
         double minThreshold = 5d / (context.getConfiguration().getInt("N", 0));
         if (pageRank >= minThreshold) {
