@@ -90,7 +90,7 @@ public class RedLinkMapper extends Mapper<LongWritable, Text, Text, Text> {
             //         String[] myLinks = links.split(" ");
             for (int i = 0; i < myLinks.size(); i++) {
 //                Write reverse? (link,title) pairs (multiple writes are ok)
-                String temp = myLinks.get(i).trim().replaceAll(" ", "_").split("\\|")[0];
+                String temp = myLinks.get(i).replaceAll(" ", "_").split("\\|")[0];
                 if (!title.equals(temp)) {
                     context.write(new Text(temp), new Text(title));
                 }
