@@ -32,10 +32,10 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-public class WordCount extends Configured implements Tool {
+public class PageRank extends Configured implements Tool {
 
     public static void main(String[] args) throws Exception {
-        int res = ToolRunner.run(new Configuration(), new WordCount(), args);
+        int res = ToolRunner.run(new Configuration(), new PageRank(), args);
         System.exit(res);
     }
 
@@ -52,13 +52,13 @@ public class WordCount extends Configured implements Tool {
             conf.set("xmlinput.end", "</page>");
 
             Job job = Job.getInstance(conf);
-            job.setJarByClass(WordCount.class);
+            job.setJarByClass(PageRank.class);
 
             // specify a mapper
-            job.setMapperClass(WordCountMapper.class);
+            job.setMapperClass(RedLinkMapper.class);
 
             // specify a reducer
-            job.setReducerClass(WordCountReducer.class);
+            job.setReducerClass(RedLinkReducer.class);
 
             // specify output types
             job.setOutputKeyClass(Text.class);
@@ -73,7 +73,7 @@ public class WordCount extends Configured implements Tool {
 
             job.waitForCompletion(true);
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
-            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            Logger.getLogger(PageRank.class.getName()).log(Level.SEVERE, ex.toString(), ex);
             System.err.println("Error during mapreduce job1.");
             return 2;
         }
@@ -84,7 +84,7 @@ public class WordCount extends Configured implements Tool {
             Configuration conf2 = new Configuration();
 
             Job job2 = Job.getInstance(conf2);
-            job2.setJarByClass(WordCount.class);
+            job2.setJarByClass(PageRank.class);
 
             // specify a mapper
             job2.setMapperClass(AdjMapper.class);
@@ -105,7 +105,7 @@ public class WordCount extends Configured implements Tool {
 
             job2.waitForCompletion(true);
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
-            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            Logger.getLogger(PageRank.class.getName()).log(Level.SEVERE, ex.toString(), ex);
             System.err.println("Error during mapreduce job2.");
             return 2;
         }
@@ -121,7 +121,7 @@ public class WordCount extends Configured implements Tool {
             conf3.set("mapreduce.output.textoutputformat.separator", "=");
 
             Job job3 = Job.getInstance(conf3);
-            job3.setJarByClass(WordCount.class);
+            job3.setJarByClass(PageRank.class);
 
             // specify a mapper
             job3.setMapperClass(PageCountMapper.class);
@@ -142,7 +142,7 @@ public class WordCount extends Configured implements Tool {
 
             job3.waitForCompletion(true);
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
-            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            Logger.getLogger(PageRank.class.getName()).log(Level.SEVERE, ex.toString(), ex);
             System.err.println("Error during mapreduce job3.");
             return 2;
         }
@@ -183,7 +183,7 @@ public class WordCount extends Configured implements Tool {
                 conf4.setInt("N", n);
 
                 Job job4 = Job.getInstance(conf4);
-                job4.setJarByClass(WordCount.class);
+                job4.setJarByClass(PageRank.class);
 
                 // specify a mapper
                 job4.setMapperClass(PageRankMapper.class);
@@ -207,7 +207,7 @@ public class WordCount extends Configured implements Tool {
                 job4.setOutputFormatClass(TextOutputFormat.class);
                 job4.waitForCompletion(true);
             } catch (InterruptedException | ClassNotFoundException | IOException ex) {
-                Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+                Logger.getLogger(PageRank.class.getName()).log(Level.SEVERE, ex.toString(), ex);
                 System.err.println("Error during mapreduce job4.");
                 return 2;
             }
@@ -256,7 +256,7 @@ public class WordCount extends Configured implements Tool {
                  */
                 job5.setNumReduceTasks(1);
                 job5.setSortComparatorClass(MyWritableComparator.class);
-                job5.setJarByClass(WordCount.class);
+                job5.setJarByClass(PageRank.class);
 
                 // specify a mapper
                 job5.setMapperClass(SortMapper.class);
@@ -280,12 +280,13 @@ public class WordCount extends Configured implements Tool {
 
                 returnCode = job5.waitForCompletion(true) ? 0 : 1;
             } catch (InterruptedException | ClassNotFoundException | IOException ex) {
-                Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+                Logger.getLogger(PageRank.class.getName()).log(Level.SEVERE, ex.toString(), ex);
                 System.err.println("Error during mapreduce job5.");
                 return 2;
             }
         }
         /**
+         * Copy necessary output files to args[1]        /**
          * Copy necessary output files to args[1]
          */
 
@@ -302,7 +303,7 @@ public class WordCount extends Configured implements Tool {
             FileSystem outputFS = output.getFileSystem(conf);
             org.apache.hadoop.fs.FileUtil.copy(outLinkGraphFS, outLinkGraph, outputFS, output, false, true, conf);
         } catch (IOException ex) {
-            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            Logger.getLogger(PageRank.class.getName()).log(Level.SEVERE, ex.toString(), ex);
             System.err.println("Error while copying results.");
             return 2;
         }
@@ -320,7 +321,7 @@ public class WordCount extends Configured implements Tool {
             FileSystem outputFS = output.getFileSystem(conf);
             org.apache.hadoop.fs.FileUtil.copy(outLinkGraphFS, outLinkGraph, outputFS, output, false, true, conf);
         } catch (IOException ex) {
-            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            Logger.getLogger(PageRank.class.getName()).log(Level.SEVERE, ex.toString(), ex);
             System.err.println("Error while copying results.");
             return 2;
         }
@@ -338,7 +339,7 @@ public class WordCount extends Configured implements Tool {
             FileSystem outputFS = output.getFileSystem(conf);
             org.apache.hadoop.fs.FileUtil.copy(outLinkGraphFS, outLinkGraph, outputFS, output, false, true, conf);
         } catch (IOException ex) {
-            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            Logger.getLogger(PageRank.class.getName()).log(Level.SEVERE, ex.toString(), ex);
             System.err.println("Error while copying results.");
             return 2;
         }
@@ -356,7 +357,7 @@ public class WordCount extends Configured implements Tool {
             FileSystem outputFS = output.getFileSystem(conf);
             org.apache.hadoop.fs.FileUtil.copy(outLinkGraphFS, outLinkGraph, outputFS, output, false, true, conf);
         } catch (IOException ex) {
-            Logger.getLogger(WordCount.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            Logger.getLogger(PageRank.class.getName()).log(Level.SEVERE, ex.toString(), ex);
             System.err.println("Error while copying results.");
             return 2;
         }

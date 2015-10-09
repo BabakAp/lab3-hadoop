@@ -23,14 +23,14 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import javax.xml.stream.XMLStreamException;
 
-public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
+public class RedLinkMapper extends Mapper<LongWritable, Text, Text, Text> {
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        if (value.toString().contains("nowiki")) {
-            System.out.println("nowiki detected");
-        }
-        String fixed = value.toString().replaceAll("<nowiki />", "");
+//        if (value.toString().contains("&lt;nowiki /&gt;")) {
+//            System.out.println("nowiki detected");
+//        }
+        String fixed = value.toString().replaceAll("<nowiki />|&lt;nowiki /&gt;", "");
         try {
             XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(new ByteArrayInputStream(fixed.getBytes()));
             String title = "";
@@ -57,16 +57,15 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
             }
             reader.close();
 
-            title = title.trim();
-            title = title.replaceAll(" ", "_");
+            title = title.trim().replaceAll(" ", "_");
 //            title = title.toLowerCase();
             /**
              * Find type 1 links e.g. [[some text]] and type 2 links [[a|b]]
              */
-            ArrayList<String> blah = findLinks(textData);
-            for (String s : blah) {
-                links += " " + s.trim().replaceAll(" ", "_").split("\\|")[0];
-            }
+            ArrayList<String> myLinks = findLinks(textData);
+//            for (String s : my) {
+//                links += " " + s.trim().replaceAll(" ", "_").split("\\|")[0];
+//            }
 //            Pattern p = Pattern.compile("\\[\\[([^\\[\\[\\]\\]]*?)\\]\\]");
 //            Matcher m = p.matcher(textData);
 //            while (m.find()) {
@@ -76,20 +75,20 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
 //                    links += " " + newlink;
 //                }
 //            }
-            links = links.trim();
+       //     links = links.trim();
             /**
              * For every title that exists, write the title and "!"
              */
             context.write(new Text(title), new Text("!"));
 //            links = links.replaceAll(title, "");
-            links = links.trim();
-            String[] myLinks = links.split(" ");
-            for (int i = 0; i < myLinks.length; i++) {
+  //          links = links.trim();
+   //         String[] myLinks = links.split(" ");
+            for (int i = 0; i < myLinks.size(); i++) {
 //                Write reverse? (link,title) pairs (multiple writes are ok)
-                context.write(new Text(myLinks[i]), new Text(title));
+                context.write(new Text(myLinks.get(i).replaceAll(" ", "_").split("\\|")[0]), new Text(title));
             }
         } catch (XMLStreamException ex) {
-            Logger.getLogger(WordCountMapper.class.getName()).log(Level.SEVERE, ex.toString(), ex);
+            Logger.getLogger(RedLinkMapper.class.getName()).log(Level.SEVERE, ex.toString(), ex);
         }
     }
 
