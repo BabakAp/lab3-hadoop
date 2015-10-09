@@ -26,6 +26,7 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+        
         try {
             XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(new ByteArrayInputStream(value.getBytes()));
             String title = "";
@@ -58,7 +59,7 @@ public class WordCountMapper extends Mapper<LongWritable, Text, Text, Text> {
             /**
              * Find type 1 links e.g. [[some text]] and type 2 links [[a|b]]
              */
-            Pattern p = Pattern.compile("\\[\\[(.*?)\\]\\]");
+            Pattern p = Pattern.compile("\\[\\[([^\\[\\[\\]\\]]*?)\\]\\]");
             Matcher m = p.matcher(textData);
             while (m.find()) {
                 String newlink = (m.group(1)).trim().replaceAll(" ", "_").split("\\|")[0];
