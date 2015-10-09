@@ -20,7 +20,7 @@ public class RedLinkReducer extends Reducer<Text, Text, Text, Text> {
             if (t.toString().trim().equalsIgnoreCase("!")) {
                 isRedLink = false;
             }
-            myValues.add(t.toString());
+            myValues.add(t.toString().trim());
         }
         if (!isRedLink) {
             for (String t : myValues) {

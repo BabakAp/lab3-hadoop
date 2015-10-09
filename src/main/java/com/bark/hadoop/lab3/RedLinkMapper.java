@@ -34,7 +34,6 @@ public class RedLinkMapper extends Mapper<LongWritable, Text, Text, Text> {
         try {
             XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(new ByteArrayInputStream(fixed.getBytes()));
             String title = "";
-            String links = "";
             String textData = "";
             String currentElement = "";
             while (reader.hasNext()) {
@@ -83,7 +82,7 @@ public class RedLinkMapper extends Mapper<LongWritable, Text, Text, Text> {
 //            links = links.replaceAll(title, "");
   //          links = links.trim();
    //         String[] myLinks = links.split(" ");
-            for (int i = 0; i < myLinks.size(); i++) {
+            for (int i = 0; i < myLinks.size(); i++)  {
 //                Write reverse? (link,title) pairs (multiple writes are ok)
                 context.write(new Text(myLinks.get(i).replaceAll(" ", "_").split("\\|")[0]), new Text(title));
             }
