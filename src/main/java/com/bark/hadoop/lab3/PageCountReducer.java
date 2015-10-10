@@ -10,10 +10,6 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-/**
- *
- * @author roozbeh
- */
 public class PageCountReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
 
     @Override
@@ -25,6 +21,4 @@ public class PageCountReducer extends Reducer<Text, IntWritable, Text, IntWritab
         
         context.write(key, new IntWritable(sum));
     }
-    //TODO: Move this to main class.
-    //conf.set("mapred.textoutputformat.separator", "=");
 }

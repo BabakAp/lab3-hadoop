@@ -6,20 +6,16 @@
 package com.bark.hadoop.lab3;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.MathContext;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-/**
- *
- * @author babak alipour (babak.alipour@gmail.com)
- */
 public class SortReducer extends Reducer<DoubleWritable, Text, Text, DoubleWritable> {
 
     @Override
     public void reduce(DoubleWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+        //reducer is given (pagerank,page) pairs. Internally sorts it (@see MyWritableComparator). 
+        //prints out (page,pagerank) pairs as output.
         for(Text t: values) {
             context.write(t, key);
         }

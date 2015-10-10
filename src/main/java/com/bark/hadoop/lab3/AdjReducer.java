@@ -14,15 +14,14 @@ public class AdjReducer extends Reducer<Text, Text, Text, Text> {
     
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+        //aggregate all the pages that current page (key) links to in one tab seperated string.
         String line = "";
-//        line += "_!";
         for (Text t : values) {
             String tString = t.toString();
             if (!tString.equals("!")) {
                 line += "\t" + tString;
             }
         }
-        line = line.trim();
-        context.write(key, new Text(line));
+        context.write(key, new Text(line.trim()));
     }
 }

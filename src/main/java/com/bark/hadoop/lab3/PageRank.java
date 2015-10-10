@@ -117,7 +117,6 @@ public class PageRank extends Configured implements Tool {
             /**
              * Change output separator to "=" instead of default \t for this job
              */
-//            conf3.set("mapred.textoutputformat.separator", "=");
             conf3.set("mapreduce.output.textoutputformat.separator", "=");
 
             Job job3 = Job.getInstance(conf3);

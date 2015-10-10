@@ -6,8 +6,6 @@
 package com.bark.hadoop.lab3;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.hadoop.io.DoubleWritable;
@@ -19,15 +17,14 @@ public class SortMapper extends Mapper<LongWritable, Text, DoubleWritable, Text>
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-//        MathContext mc = new MathContext(19);
         double pageRank = 0;
+        //intermediate files identify pageranks with _!0.0000.. pattern.
         Pattern pt = Pattern.compile("(_!\\d+.\\S+)");
         Matcher mt = pt.matcher(value.toString());
-//        String kossher = "";
         if (mt.find()) {
             pageRank = Double.parseDouble(mt.group(1).substring(2));
-//            pageRank = new BigDecimal(mt.group(1).substring(2), mc).doubleValue();
         }
+        //ignore cases with pageranks below 5/N
         double minThreshold = 5d / (context.getConfiguration().getInt("N", 0));
         if (pageRank >= minThreshold) {
             context.write(new DoubleWritable(pageRank), new Text(value.toString().split("\t")[0]));

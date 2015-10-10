@@ -20,17 +20,13 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import javax.xml.stream.XMLStreamException;
 
 public class RedLinkMapper extends Mapper<LongWritable, Text, Text, Text> {
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-//        if (value.toString().contains("&lt;nowiki /&gt;")) {
-//            System.out.println("nowiki detected");
-//        }
+        //Possible single element nowiki tag makes xmlstreamparser to stop. Remove them first.
         String fixed = value.toString().replaceAll("<nowiki />|&lt;nowiki /&gt;", "");
         try {
             XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(new ByteArrayInputStream(fixed.getBytes()));
@@ -47,18 +43,14 @@ public class RedLinkMapper extends Mapper<LongWritable, Text, Text, Text> {
                         if (currentElement.equalsIgnoreCase("title")) {
                             title += reader.getText();
                         } else if (currentElement.equalsIgnoreCase("text")) {
-//                            TODO: String has a limit, will result in error: "constant string too long" if text is too big,
-//                             we should do link extraction line by line
-//                            UPDATE: maybe not! Apparently the limit is only for 'constant' strings, not strings constructed during runtime :|
                             textData += reader.getText();
                         }
                         break;
                 }
             }
             reader.close();
-
+            //At this point we have the title and text data ready.
             title = title.trim().replaceAll(" ", "_");
-//            title = title.toLowerCase();
             /**
              * Find type 1 links e.g. [[some text]] and type 2 links [[a|b]]
              */
@@ -68,28 +60,13 @@ public class RedLinkMapper extends Mapper<LongWritable, Text, Text, Text> {
             } catch (Exception e) {
                 Logger.getLogger(RedLinkMapper.class.getName()).log(Level.SEVERE, e.getMessage(), e);
             }
-//            for (String s : my) {
-//                links += " " + s.trim().replaceAll(" ", "_").split("\\|")[0];
-//            }
-//            Pattern p = Pattern.compile("\\[\\[([^\\[\\[\\]\\]]*?)\\]\\]");
-//            Matcher m = p.matcher(textData);
-//            while (m.find()) {
-//                String newlink = (m.group(1)).trim().replaceAll(" ", "_").split("\\|")[0];
-//                //TODO: "it should not contain a link which points to the page itself"
-//                if (!title.equals(newlink)) {
-//                    links += " " + newlink;
-//                }
-//            }
-            //     links = links.trim();
             /**
              * For every title that exists, write the title and "!"
              */
             context.write(new Text(title), new Text("!"));
-//            links = links.replaceAll(title, "");
-            //          links = links.trim();
-            //         String[] myLinks = links.split(" ");
+
             for (int i = 0; i < myLinks.size(); i++) {
-//                Write reverse? (link,title) pairs (multiple writes are ok)
+                //Write (link,title) pairs (inlinks) (multiple writes are ok)
                 String temp = myLinks.get(i).replaceAll(" ", "_").split("\\|")[0];
                 if (!title.equals(temp)) {
                     context.write(new Text(temp), new Text(title));
@@ -100,7 +77,11 @@ public class RedLinkMapper extends Mapper<LongWritable, Text, Text, Text> {
             Logger.getLogger(RedLinkMapper.class.getName()).log(Level.SEVERE, ex.toString(), ex);
         }
     }
-
+    /**
+     *
+     *@param data text data from XML parser that contains links with [[ ]] format
+     *@return an ArrayList containing all the links (inner links are extracted as well).
+     */
     public static ArrayList<String> findLinks(String data) {
         ArrayList<String> list = new ArrayList<>();
         Stack<Integer> s = new Stack<>();

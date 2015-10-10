@@ -10,10 +10,6 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-/**
- * 
- * @author babak alipour (babak.alipour@gmail.com)
- */
 public class AdjMapper extends Mapper<LongWritable, Text, Text, Text> {
 
     @Override
